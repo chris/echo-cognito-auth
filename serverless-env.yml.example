@@ -1,0 +1,14 @@
+# Set these to the values you obtain, see the Readme
+# You'd want to set `awsAccountID`, `ECHO_COGNITO_AUTH_COGNITO_CLIENT_ID`,
+# and `cognitoEmailArn` in serverless.yml directly as they should be the
+# same for all users, but we have these here to illustrate and maintain
+# this as a demo repo.
+# Add a `production` key/section if you have a production account.
+dev:
+  awsAccountID: 111111111111
+  awsRegion: us-east-2
+  cognitoClientID=123456789abcdefghizjklm
+  cognitoEmailArn: arn:aws:ses:us-east-2:111111111111:identity/help@example.com
+  cognitoClientSecret: getyoursecretfromtheawsconsoleandputithere
+  domainName: something.execute-api.us-east-2.amazonaws.com
+  profile: my_aws_profile

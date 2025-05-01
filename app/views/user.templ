@@ -1,0 +1,9 @@
+package views
+
+templ User(user CurrentUser) {
+	@layout("Authenticated User Page", &user, userPageContent(user))
+}
+
+templ userPageContent(user CurrentUser) {
+	<p>Welcome, { user.Name }! This page is only accessible to authenticated users.</p>
+}

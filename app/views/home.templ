@@ -1,0 +1,27 @@
+package views
+
+// CurrentUser is the current user of the application, for use in the session store.
+type CurrentUser struct {
+	ID   string
+	Name string
+}
+
+type HomeData struct {
+	StravaClientID string
+	CurrentUser    *CurrentUser
+}
+
+// Home is the home page of the application.
+templ Home(hd HomeData) {
+	@layout("Home", hd.CurrentUser, templ.Join(introduction(), moreContent()))
+}
+
+templ introduction() {
+	<p>Welcome to Echo-Cognito-Auth!</p>
+}
+
+templ moreContent() {
+	<p>
+		This is the home page.
+	</p>
+}

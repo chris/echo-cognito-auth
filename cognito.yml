@@ -1,0 +1,82 @@
+#
+# Cognito user pool/auth setup
+#
+Resources:
+  EchoCognitoAuthUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: echo_cognito_auth
+      UsernameAttributes: # use email as username/login
+        - 'email'
+      AutoVerifiedAttributes:
+        - 'email'
+      UsernameConfiguration:
+        CaseSensitive: false
+      EmailConfiguration:
+        EmailSendingAccount: DEVELOPER
+        SourceArn: ${param:cognitoEmailArn}
+        ConfigurationSet: EchoCognitoAuth
+      # DeletionProtection: ACTIVE
+      # Add standard Cognito attributes "name". Note, you must set these at
+      # at creation, and they cannot be changed later.
+      Schema:
+        - Name: name
+          Mutable: false
+          Required: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailMessage: 'Your echo-cognito-auth verification code is {####}'
+        EmailSubject: 'Your echo-cognito-auth verification code'
+
+  EchoCognitoAuthCognitoClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: echo_cognito_auth_user_pool_client
+      UserPoolId:
+        Ref: EchoCognitoAuthUserPool
+      GenerateSecret: true
+      SupportedIdentityProviders:
+        - COGNITO
+      AccessTokenValidity: 24 # hours
+      IdTokenValidity: 24 # hours
+      RefreshTokenValidity: 1825 # days - 5 years
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - "email"
+        - "openid"
+        - "profile"
+        - "aws.cognito.signin.user.admin"
+      # in a real app, you'll have a custom domain and want to put that here
+      CallbackURLs:
+        - 'http://localhost:8080/auth/cognito/callback'
+        - 'https://${param:domainName}/auth/cognito/callback'
+      ExplicitAuthFlows:
+        - ALLOW_USER_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      LogoutURLs:
+        - 'http://localhost:8080'
+        - 'https://${param:domainName}'
+
+  # Cognito domain: this is using the Amazon URL with a named subdomain, NOT
+  # a full custom domain name. The subdomain name is set in the params section
+  # of serverless.yml.
+  EchoCognitoAuthCognitoDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: ${param:cognitoDomain}
+      UserPoolId: !Ref EchoCognitoAuthUserPool
+      ManagedLoginVersion: "2"

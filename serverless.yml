@@ -1,0 +1,131 @@
+# Echo Cognito Auth Serverless Configuration
+service: EchoCognitoAuth
+
+frameworkVersion: '>=4.9.0 <5.0.0'
+
+stages:
+  dev:
+    params:
+      awsAccountID: ${file(./serverless-env.yml):dev.awsAccountID}
+      cognitoDomain: echocogauth # Note, cannot use "cognito" in the name!
+      cognitoEmailArn: ${file(./serverless-env.yml):dev.cognitoEmailArn}
+      # Specify your custom domain name here. In this case, we aren't using one,
+      # so we're using the domain name that API Gateway generates (update this
+      # if you re-deploy and it changes).
+      domainName: ${file(./serverless-env.yml):dev.domainName}
+      profile: ${file(./serverless-env.yml):dev.profile} # your dev account AWS profile
+      session_secret: d14A1B98BEFF64ED2B5B36033794DA96E # something of your choosing
+  production:
+    params:
+      awsAccountID: ${file(./serverless-env.yml):production.awsAccountID}
+      cognitoDomain: echocogauth # Note, cannot use "cognito" in the name!
+      cognitoEmailArn: ${file(./serverless-env.yml):production.cognitoEmailArn}
+      domainName: ${file(./serverless-env.yml):production.domainName}
+      profile: ${file(./serverless-env.yml):production.profile} # your prod account AWS profile
+      session_secret: pE03451979B7E4DF5B7F47B78BA3746AA # something of your choosing
+
+custom:
+  defaultStage: dev
+  scriptable:
+    hooks:
+      before:package:createDeploymentArtifacts:
+        - ./build.sh ${self:provider.stage}
+
+    commands:
+      generate: cd app; go tool templ generate; cd ..
+      run: cd app; go tool templ generate; COGNITO_USER_POOL_CLIENT_ID="${file(./serverless-env.yml):dev.cognitoClientID}" COGNITO_BASE_URL="https://${param:cognitoDomain}.auth.${self:provider.region}.amazoncognito.com" COGNITO_REDIRECT_URI="http://localhost:8080/auth/cognito/callback" ECHO_COGNITO_AUTH_SESSION_SECRET="${param:session_secret}" COGNITO_USER_POOL_CLIENT_SECRET=${file(./serverless-env.yml):dev.cognitoClientSecret} go run *.go live
+
+provider:
+  name: aws
+  profile: ${param:profile}
+  runtime: provided.al2023
+  architecture: arm64
+  region: ${file(./serverless-env.yml):${self:provider.stage}.awsRegion}
+  stage: ${opt:stage, self:custom.defaultStage}
+  logs:
+    # API Gateway access logs ("httpApi")
+    httpApi: true
+  tracing:
+    lambda: true
+    apiGateway: true
+  environment:
+    COGNITO_USER_POOL_CLIENT_ID: !Ref EchoCognitoAuthCognitoClient
+    COGNITO_BASE_URL: https://${param:cognitoDomain}.auth.${self:provider.region}.amazoncognito.com
+    COGNITO_REDIRECT_URI: https://${param:domainName}/auth/cognito/callback
+    COGNITO_USER_POOL_CLIENT_SECRET: ${${file(./serverless-env.yml):${self:provider.stage}.ECHO_COGNITO_AUTH_CLIENT_SECRET}
+    ECHO_COGNITO_AUTH_SESSION_SECRET: ${param:session_secret}
+
+package:
+  individually: true
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-scriptable-plugin
+
+functions:
+  echoCognitoAuth:
+    handler: bootstrap
+    timeout: 10
+    package:
+      artifact: dist/echo-cognito-auth.zip
+    # Add the lambda layer for the AWS Lambda Web Adapter, see:
+    # https://github.com/awslabs/aws-lambda-web-adapter
+    layers:
+      - arn:aws:lambda:${self:provider.region}:753240598075:layer:LambdaAdapterLayerArm64:24
+    # Lambdalith: this lambda handles all HTTP requests of any method or path
+    events:
+      - httpApi: '*'
+
+  cognitoCustomMessage:
+    handler: bootstrap
+    package:
+      artifact: dist/cognitotriggerscustommessage.zip
+    timeout: 5 # Cognito maximum response time, after which it retries
+    events:
+      - cognitoUserPool:
+          pool: echo_cognito_auth # can't use a ref/GetAttr, as this has to be a string
+          trigger: CustomMessage
+          existing: true
+          # Probably want to set the following if you use custom attributes.
+          # See the notes in the Readme for the bug around this.
+          # forceDeploy: true
+
+  cognitoPostConfirmation:
+    handler: bootstrap
+    package:
+      artifact: dist/cognitotriggerspostconfirmation.zip
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      # Cognito rights, for updating attributes
+      - Effect: Allow
+        Action:
+          - cognito-idp:AdminUpdateUserAttributes
+        Resource: '*'
+      # DynamoDB rights - say if you are creating your corresponding user in DynamoDB.
+      # - Effect: Allow
+      #   Action:
+      #     - dynamodb:DescribeTable
+      #     - dynamodb:Query
+      #     - dynamodb:Scan
+      #     - dynamodb:GetItem
+      #     - dynamodb:GetRecords
+      #     - dynamodb:PutItem
+      #     - dynamodb:UpdateItem
+      #     - dynamodb:DeleteItem
+      #   Resource:
+      #     - 'Fn::GetAtt': [MyTable, Arn]
+      #     - 'Fn::Join':
+      #         ['/', ['Fn::GetAtt': [MyTable, Arn], 'index', '*']]
+    timeout: 5
+    events:
+      - cognitoUserPool:
+          pool: echo_cognito_auth # can't use a ref/GetAttr, as this has to be a string
+          trigger: PostConfirmation
+          existing: true
+          # forceDeploy: true
+
+resources:
+  - ${file(cognito.yml)}

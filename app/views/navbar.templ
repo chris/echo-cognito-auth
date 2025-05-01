@@ -1,0 +1,31 @@
+package views
+
+import (
+	"fmt"
+	"os"
+)
+
+func cognitoLoginURL() string {
+	baseURL := os.Getenv("COGNITO_BASE_URL")
+	clientID := os.Getenv("COGNITO_CLIENT_ID")
+	redirectURL := os.Getenv("COGNITO_REDIRECT_URI")
+
+	return fmt.Sprintf("%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s/auth/cognito/callback",
+		baseURL, clientID, redirectURL)
+}
+
+templ navbar(u *CurrentUser) {
+	<div id="navbar">
+		<a href="/">Home</a>
+		&nbsp;|&nbsp;
+		if u != nil {
+			<a href="/user">Your page</a>
+			&nbsp;|&nbsp;
+			<a href="/admin">Admin</a>
+			&nbsp;|&nbsp;
+			<a href="/logout">Logout ({ u.Name })</a>
+		} else {
+			<a href="/login">Login/Signup</a>
+		}
+	</div>
+}

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .bg { fill: #fff; }
+    .echo { fill: #4e8cff; }
+    .lock-body { fill: #222; }
+    .lock-shackle { fill: none; stroke: #222; stroke-width: 2; }
+    .arrow { fill: #4e8cff; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #222; }
+      .echo { fill: #8cbfff; }
+      .lock-body { fill: #fff; }
+      .lock-shackle { stroke: #fff; }
+      .arrow { fill: #8cbfff; }
+    }
+  </style>
+  <!-- Background -->
+  <rect class="bg" width="64" height="64" rx="12"/>
+  <!-- Echo swirl (simplified) -->
+  <path class="echo" d="M32 16a16 16 0 1 1-11.31 4.69l2.83 2.83A12 12 0 1 0 32 20z"/>
+  <!-- Lock body -->
+  <rect class="lock-body" x="24" y="32" width="16" height="14" rx="4"/>
+  <!-- Lock shackle -->
+  <path class="lock-shackle" d="M28 32v-4a4 4 0 0 1 8 0v4"/>
+  <!-- Login arrow (right) -->
+  <polygon class="arrow" points="14,32 26,28 26,36"/>
+  <!-- Logout arrow (left, mirrored) -->
+  <polygon class="arrow" points="50,32 38,28 38,36"/>
+</svg>
