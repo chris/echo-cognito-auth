@@ -3,6 +3,8 @@ package views
 import (
 	"fmt"
 	"os"
+
+	"echo-cognito-auth/models"
 )
 
 func cognitoLoginURL() string {
@@ -14,7 +16,7 @@ func cognitoLoginURL() string {
 		baseURL, clientID, redirectURL)
 }
 
-templ navbar(u *CurrentUser) {
+templ navbar(u *models.User) {
 	<div id="navbar">
 		<a href="/">Home</a>
 		&nbsp;|&nbsp;

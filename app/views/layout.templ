@@ -1,6 +1,8 @@
 package views
 
-templ layout(title string, currentUser *CurrentUser, body templ.Component) {
+import "echo-cognito-auth/models"
+
+templ layout(title string, User *models.User, body templ.Component) {
 	<html lang="en">
 		<head>
 			<meta charset="utf-8"/>
@@ -13,7 +15,7 @@ templ layout(title string, currentUser *CurrentUser, body templ.Component) {
 			<link rel="stylesheet" href="/assets/css/echocogauth.css"/>
 		</head>
 		<body>
-			@navbar(currentUser)
+			@navbar(User)
 			<h1>Echo Cognito Auth Example</h1>
 			@body
 		</body>

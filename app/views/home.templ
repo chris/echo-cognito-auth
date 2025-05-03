@@ -1,19 +1,15 @@
 package views
 
-// CurrentUser is the current user of the application, for use in the session store.
-type CurrentUser struct {
-	ID   string
-	Name string
-}
+import "echo-cognito-auth/models"
 
 type HomeData struct {
 	StravaClientID string
-	CurrentUser    *CurrentUser
+	User           *models.User
 }
 
 // Home is the home page of the application.
 templ Home(hd HomeData) {
-	@layout("Home", hd.CurrentUser, templ.Join(introduction(), moreContent()))
+	@layout("Home", hd.User, templ.Join(introduction(), moreContent()))
 }
 
 templ introduction() {

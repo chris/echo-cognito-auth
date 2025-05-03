@@ -17,18 +17,28 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	slogecho "github.com/samber/slog-echo"
 
+	"echo-cognito-auth/models"
 	"echo-cognito-auth/views"
 )
 
 const (
 	sessionName    = "session"
 	sessionUserKey = "user"
+	contextUserKey = "user"
 )
 
 var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 //go:embed assets
 var staticAssets embed.FS
+
+type CustomContext struct {
+	echo.Context
+}
+
+func (c *CustomContext) User() *models.User {
+	return c.Get(contextUserKey).(*models.User)
+}
 
 func main() {
 	app := echo.New()
@@ -42,14 +52,16 @@ func main() {
 
 func setupMiddleware(e *echo.Echo) {
 	e.Use(slogecho.New(logger))
-
 	e.Use(middleware.Recover())
 
 	// session middleware & register custom types stored in session
 	store := sessions.NewCookieStore([]byte(os.Getenv("ECHO_COGNITO_AUTH_SESSION_SECRET")))
 	e.Use(session.Middleware(store))
 
-	gob.Register(views.CurrentUser{})
+	gob.Register(models.User{})
+
+	// This needs the session, so needs to be after session middleware
+	e.Use(AddUserToContext)
 }
 
 func setupRoutes(e *echo.Echo) {
@@ -83,26 +95,17 @@ func Render(ctx echo.Context, statusCode int, t templ.Component) error {
 }
 
 func HomeHandler(c echo.Context) error {
-	return Render(c, http.StatusOK, views.Home(views.HomeData{
-		CurrentUser: currentUser(c),
-	}))
+	cc := &CustomContext{c}
+	return Render(c, http.StatusOK, views.Home(views.HomeData{User: cc.User()}))
 }
 
 func LoginHandler(c echo.Context) error {
+	cc := &CustomContext{c}
 	// Check if user is already authenticated via session
-	if currentUser(c) != nil {
+	if cc.User() != nil {
 		// User is already logged in, redirect to home page
 		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
-
-	// // Reset the session max age, because it's set to -1 when the user is logged out
-	// sess, err := session.Get("session", c)
-	// if err == nil {
-	// 	sess.Options.MaxAge = 86400 * 30 // 30 days in seconds
-	// 	if err := sess.Save(c.Request(), c.Response()); err != nil {
-	// 		logger.Error("LoginHandler: failed to save session", "error", err)
-	// 	}
-	// }
 
 	return c.Redirect(http.StatusTemporaryRedirect, cognitoHostedLoginURL())
 }
@@ -139,7 +142,7 @@ func CognitoCallbackHandler(c echo.Context) error {
 		return err
 	}
 
-	sess.Values[sessionUserKey] = views.CurrentUser{
+	sess.Values[sessionUserKey] = models.User{
 		ID:   userInfo.Sub,
 		Name: userInfo.Name,
 	}
@@ -158,17 +161,17 @@ func LogoutHandler(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, cognitoHostedLogoutURL(c.Request().Host))
 }
 
-func currentUser(c echo.Context) *views.CurrentUser {
+func userFromSession(c echo.Context) *models.User {
 	sess, err := session.Get(sessionName, c)
 	if err != nil {
-		logger.Error("currentUser: failed to get session", "error", err)
+		logger.Error("User: failed to get session", "error", err)
 		return nil
 	}
 
 	if user, ok := sess.Values[sessionUserKey]; ok {
-		var curUser = views.CurrentUser{}
-		if curUser, ok = user.(views.CurrentUser); !ok {
-			logger.Error("currentUser: user is not the proper type", "user", user)
+		var curUser = models.User{}
+		if curUser, ok = user.(models.User); !ok {
+			logger.Error("User: user is not the proper type", "user", user)
 			return nil
 		}
 
@@ -208,7 +211,8 @@ func getFileSystem(useOS bool) http.FileSystem {
 }
 
 func AdminHandler(c echo.Context) error {
-	user := c.Get("user").(*views.CurrentUser)
+	cc := &CustomContext{c}
+	user := cc.User()
 
 	// For this demo app, we just see if the user's name includes "Admin".
 	// Normally you'd check a flag/role on the user record, etc.
@@ -220,18 +224,29 @@ func AdminHandler(c echo.Context) error {
 }
 
 func UserHandler(c echo.Context) error {
-	user := c.Get("user").(*views.CurrentUser)
-	return Render(c, http.StatusOK, views.User(*user))
+	cc := &CustomContext{c}
+	return Render(c, http.StatusOK, views.User(*cc.User()))
+}
+
+func AddUserToContext(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user := userFromSession(c)
+		if user != nil {
+			c.Set(contextUserKey, user)
+		}
+
+		return next(c)
+	}
 }
 
 func RequireAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		user := currentUser(c)
+		cc := &CustomContext{c}
+		user := cc.User()
 		if user == nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "You must be logged in to access this page")
 		}
 
-		c.Set("user", user)
 		return next(c)
 	}
 }

@@ -1,9 +1,11 @@
 package views
 
-templ User(user CurrentUser) {
+import "echo-cognito-auth/models"
+
+templ User(user models.User) {
 	@layout("Authenticated User Page", &user, userPageContent(user))
 }
 
-templ userPageContent(user CurrentUser) {
+templ userPageContent(user models.User) {
 	<p>Welcome, { user.Name }! This page is only accessible to authenticated users.</p>
 }

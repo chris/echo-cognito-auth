@@ -8,15 +8,11 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// CurrentUser is the current user of the application, for use in the session store.
-type CurrentUser struct {
-	ID   string
-	Name string
-}
+import "echo-cognito-auth/models"
 
 type HomeData struct {
 	StravaClientID string
-	CurrentUser    *CurrentUser
+	User           *models.User
 }
 
 // Home is the home page of the application.
@@ -41,7 +37,7 @@ func Home(hd HomeData) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = layout("Home", hd.CurrentUser, templ.Join(introduction(), moreContent())).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layout("Home", hd.User, templ.Join(introduction(), moreContent())).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
