@@ -1,6 +1,8 @@
 # Echo-Cognito-Auth Example App
 
-This is a simple example app that demonstrates use of AWS Cognito for user accounts and authentication within a Go app using the [Echo framework](https://echo.labstack.com/) (and [Templ](https://templ.guide/) templates).
+This is a simple example app that demonstrates use of [AWS Cognito](https://docs.aws.amazon.com/cognito/) for user accounts and authentication within a Go app using the [Echo framework](https://echo.labstack.com/) (and [Templ](https://templ.guide/) templates).
+
+It also is designed as a "lambdalith" (i.e. single lambda to server all/majority of the app) and uses the Serverless Framework to deploy (you can ignore this if you prefer to deploy via another mechanism). The exception to that is that there are two separate lambdas for the Cognito triggers that are used. These triggers 1) notify you when an account is created (allowing you to then add that to your own DB or whatever you might need); and 2) provide a way to customize the email verification messages that Cognito sends.
 
 There are many, many ways to do user accounts and authentication within web apps, and this is not saying this is the best. This is just a sample to show how you could do it with these particular technologies, and was a way for me to have a baseline example of using Cognito in an Echo app, along with a few other bits.
 
