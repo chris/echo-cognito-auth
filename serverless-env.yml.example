@@ -7,7 +7,7 @@
 dev:
   awsAccountID: 111111111111
   awsRegion: us-east-2
-  cognitoClientID=123456789abcdefghizjklm
+  cognitoClientID: 123456789abcdefghizjklm
   cognitoEmailArn: arn:aws:ses:us-east-2:111111111111:identity/help@example.com
   cognitoClientSecret: getyoursecretfromtheawsconsoleandputithere
   domainName: something.execute-api.us-east-2.amazonaws.com
