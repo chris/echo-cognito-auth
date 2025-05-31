@@ -37,7 +37,11 @@ type CustomContext struct {
 }
 
 func (c *CustomContext) User() *models.User {
-	return c.Get(contextUserKey).(*models.User)
+	user := c.Get(contextUserKey)
+	if user != nil {
+		return user.(*models.User)
+	}
+	return nil
 }
 
 func main() {
