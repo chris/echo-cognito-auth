@@ -33,7 +33,7 @@ custom:
 
     commands:
       generate: cd app; go tool templ generate; cd ..
-      run: cd app; go tool templ generate; COGNITO_USER_POOL_CLIENT_ID="${file(./serverless-env.yml):dev.cognitoClientID}" COGNITO_BASE_URL="https://${param:cognitoDomain}.auth.${self:provider.region}.amazoncognito.com" COGNITO_REDIRECT_URI="http://localhost:8080/auth/cognito/callback" ECHO_COGNITO_AUTH_SESSION_SECRET="${param:session_secret}" COGNITO_USER_POOL_CLIENT_SECRET=${file(./serverless-env.yml):dev.cognitoClientSecret} go run *.go live
+      run: cd app; go tool templ generate && COGNITO_USER_POOL_CLIENT_ID="${file(./serverless-env.yml):dev.cognitoClientID}" COGNITO_BASE_URL="https://${param:cognitoDomain}.auth.${self:provider.region}.amazoncognito.com" COGNITO_REDIRECT_URI="http://localhost:8080/auth/cognito/callback" ECHO_COGNITO_AUTH_SESSION_SECRET="${param:session_secret}" COGNITO_USER_POOL_CLIENT_SECRET=${file(./serverless-env.yml):dev.cognitoClientSecret} go run *.go live
 
 provider:
   name: aws
