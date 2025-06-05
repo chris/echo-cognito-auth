@@ -88,6 +88,8 @@ Note, Login (vs. Signup) is essentialy the same, but obviously the user just ent
 
 ## Use/Build
 
+First, if you are going to use this as the basis of a project, you'll want to grab one of the releases and use that (the layout does not support the `gonew` tool). You will also want to search and replace all the "echo cognito auth" text with your own name. So, look for: "EchoCognitoAuth" as well as "echo-cognito-auth" and just "echo" in general. This is certainly in the `serverless.yml` and `cognito.yml` files, but is also in `go.mod`, `server.go` and the HTML templates, etc, etc.
+
 ### Required environment variables/account info
 
 You will need to set up a `serverless-env.yml` file with various values that are specific to your deploy/user. See the `serverless-env.yml.example` file and update all the values in it. Note that as it describes, you'd normally set a bunch of these values directly in `serverless.yml`, but by doing it this way, it helps keep changes/use specific values out of the repo and all in one place - adjust for your needs as you desire. Valus:
