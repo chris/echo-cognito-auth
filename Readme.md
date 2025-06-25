@@ -40,6 +40,8 @@ sequenceDiagram
   Cognito->>User: send email verification
   User->>Cognito: verify email address
   Cognito->>Cognito: Create user record
+  Cognito->>PostConfirmationLambda: provide user data to lambda
+  PostConfirmationLambda->>Cognito: success
   Cognito->>WebApp: redirect to callback URL with code (/auth/cognito/callback?code=####)
   WebApp->>Cognito: exchange code for tokens (/oauth2/token)
   Cognito->>WebApp: provide tokens
