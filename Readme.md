@@ -152,6 +152,8 @@ This will generate the templates and then compile and run the server. It will us
 
 ### Deploy
 
+**IMPORTANT!!! You will need to comment out the two Cognito lambdas in `serverless.yml` on your first deploy. This is due to a conflict/race condition that seems to occur with setting up the Cognito user pool and the reference to the user pool from these lambdas. Thus, comment those out and do an initial deploy to create the DB and user pool. Then, you can uncomment them and deploy again to add those lambdas.**
+
 First, setup environment variables, your AWS account, and so on. Then you can deploy by simply doing:
 ```
 sls deploy
