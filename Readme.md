@@ -152,7 +152,7 @@ This will generate the templates and then compile and run the server. It will us
 
 ### Deploy
 
-**IMPORTANT!!! You will need to comment out the two Cognito lambdas in `serverless.yml` on your first deploy. This is due to a conflict/race condition that seems to occur with setting up the Cognito user pool and the reference to the user pool from these lambdas. Thus, comment those out and do an initial deploy to create the DB and user pool. Then, you can uncomment them and deploy again to add those lambdas.**
+**IMPORTANT!!! You will need to comment out the two Cognito lambdas in `serverless.yml` on your first deploy. This is due to a conflict/race condition that seems to occur with setting up the Cognito user pool and the reference to the user pool from these lambdas. Thus, comment those out and do an initial deploy to create the DB and user pool. Then, you can uncomment them and deploy again to add those lambdas. Further, you'll want to grab the Cognito client ID and secret from the console and put those into your environment variables.**
 
 *Once you've done that first deploy (and Cognito is set up), then you'll want to go to Cognito and setup Managed Login (go to Cogntio > Branding > Managed Login, and select the "Create a Style" button and go from there).*
 
